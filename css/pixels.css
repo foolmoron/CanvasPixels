@@ -1,0 +1,43 @@
+.one {
+	background-color: #00FFFF;
+}
+.two {
+	background-color: #FF00FF;
+}
+.three {
+	background-color: #FFFF00;
+}
+.four {
+	background-color: #0000FF;
+}
+.five {
+	background-color: #FF0000;
+}
+
+.content {
+	height: 300px;
+}
+
+/* not xs */
+@media(min-width:768px) {
+	#pixels {
+		height: 100%;
+		width: 16.3%;
+		
+		position: fixed;
+		top: 0px;
+		right: 0px;
+	}
+}
+
+/* xs */
+@media(max-width:767px) {
+	#pixels {
+		height: 15%;
+		width: 100%;
+		
+		position: fixed;
+		bottom: 0px;
+		right: 0px;
+	}
+}
