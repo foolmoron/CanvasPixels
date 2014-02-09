@@ -1,5 +1,19 @@
 $(function() {
-	//Pixel animation
+	var NUM_PIXELS_ACROSS_VERT = 10;
+	var NUM_PIXELS_ACROSS_HORIZ = 60;
+	var PIXEL_DEATH_TIME = 2 * 1000;
+	var PIXEL_SPAWN_INTERVAL = (1 / 1000) * 1000;
+	
+	var pixelSize;
+	var pixelsAcross;
+	var pixelsDown;
+	
+	var lastUpdateTime = new Date().getTime();
+	var pixelSpawnTimer = 0;
+	var pixelsCanvas = $('#pixels');
+	var pixelsCanvasDOM = $('#pixels')[0];
+	var pixelsContext = pixelsCanvasDOM.getContext('2d');
+	
 	function Color(r, g, b, a) {
 		this.r = r;
 		this.g = g;
@@ -123,26 +137,13 @@ $(function() {
 		},
 	};
 	
-	var NUM_PIXELS_ACROSS_VERT = 10;
-	var NUM_PIXELS_ACROSS_HORIZ = 60;
-	var PIXEL_DEATH_TIME = 2 * 1000;
-	var PIXEL_SPAWN_INTERVAL = (1 / 1000) * 1000;
-	
-	var pixelSize;
-	var pixelsAcross;
-	var pixelsDown;
-	
-	var lastUpdateTime = new Date().getTime();
-	var pixelSpawnTimer = 0;
-	var pixelsCanvas = $('#pixels');
-	var pixelsCanvasDOM = $('#pixels')[0];
-	var pixelsContext = pixelsCanvasDOM.getContext('2d');
-	
+	// Start everything off
 	if (isCanvasSupported()) {
 		pixelsCanvas.show();
 		initPixels();
 	} else {
 		pixelsCanvas.hide();
+		return;
 	}
 	
 	function initPixels() {
