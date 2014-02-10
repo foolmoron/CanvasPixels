@@ -42,9 +42,10 @@ $(function() {
 		this.deathTime = deathTime;
 		this.interpolationFunction = interpolationFunction || EasingFunctions.linear;
 		
-		this.deathColor = color
 		this.lifeTime = 0;
 		this.alive = true;
+		this.deathColor = color;
+		this.position = {x: 0, y: 0};
 		
 		this.update = function(dt) {
 			this.lifeTime += dt;
@@ -57,29 +58,29 @@ $(function() {
 			this.color.a = 255 * (1 - interp);
 		};
 		
-		this.draw = function(canvas, ctx, x, y, size) {
+		this.draw = function(canvas, ctx, size) {
 			if (!this.alive)
 				return;
 				
 			ctx.globalAlpha = this.color.a / 255;
 			ctx.fillStyle = this.color.toStyleString();
-			ctx.fillRect(x, y, size, size);			
+			ctx.fillRect(this.position.x, this.position.y, size, size);			
 		};
 	}
 	Pixels = { // static utilities for Pixel
 	};
 	
 	ScreenPositionToColorsMap = {
-		colorIntervals: [], // contains list of: { screenInterval = [start, end], pixelColors = [color objects] }
+		colorIntervals: [], // contains list of: { screenInterval = [start, end], pixelsColor = color object }
 		
 		colorsAtVerticalPosition: function(verticalPosition) {
 			for (var i = 0; i < this.colorIntervals.length; i++) {
 				var interval = this.colorIntervals[i].screenInterval;
 				if (verticalPosition >= interval[0] && verticalPosition <= interval[1]) {
-					return this.colorIntervals[i].pixelColors;
+					return this.colorIntervals[i].pixelsColor;
 				}
 			}
-			return [DEFAULT_COLOR];
+			return DEFAULT_COLOR;
 		},
 	};
 	
@@ -125,20 +126,30 @@ $(function() {
 		},
 		
 		updatePixels: function(dt) {
+			var canvasTop = pixelsCanvas.offset().top - $(window).scrollTop();
 			for (i in this.allPixels) {
-				this.allPixels[i].update(dt);
-				if (!this.allPixels[i].alive)
+				var pixel = this.allPixels[i];
+				pixel.update(dt);
+				if (!pixel.alive) {
 					this.removePixel(i);
+					continue;
+				}
+					
+				var tileX = (i % pixelsAcross);
+				var tileY = Math.floor(i / pixelsAcross);
+				pixel.position.x = tileX * pixelSize;
+				pixel.position.y = tileY * pixelSize;
+				
+				var color = ScreenPositionToColorsMap.colorsAtVerticalPosition(canvasTop + pixel.position.y);
+				pixel.color.r = color.r;
+				pixel.color.g = color.g;
+				pixel.color.b = color.b;
 			}
 		},
 		
 		drawPixels: function(canvas, ctx) {
 			for (i in this.allPixels) {
-				var tileX = (i % pixelsAcross);
-				var tileY = Math.floor(i / pixelsAcross);
-				var x = tileX * pixelSize;
-				var y = tileY * pixelSize;
-				this.allPixels[i].draw(canvas, ctx, x, y, pixelSize);
+				this.allPixels[i].draw(canvas, ctx, pixelSize);
 			}
 		},
 	};
@@ -218,15 +229,18 @@ $(function() {
 		ScreenPositionToColorsMap.colorIntervals = [];
 		for	(var i = 0; i < contentDivs.length; i++) {
 			var content = $(contentDivs[i]);
-			var pixelColors = $.parseJSON(content.attr('data-pixel-colors')) || [DEFAULT_COLOR.toStyleString()];			
-			content.css('background-color', pixelColors[0]);
+			var pixelsColor = content.attr('data-pixel-colors') || DEFAULT_COLOR;			
+			//content.css('background-color', pixelsColor);
 			
 			var scrollY = $(window).scrollTop();
+			var screenheight = $(window).height();
 			var contentY = content.offset().top;
 			var contentHeight = content.height();
 			var screenInterval = [contentY - scrollY, (contentY - scrollY) + contentHeight];
 			
-			ScreenPositionToColorsMap.colorIntervals.push({screenInterval: screenInterval, pixelColors: pixelColors});
+			if (screenInterval[1] >= 0 && screenInterval[0] <= screenheight) { // filter out off-screen intervals
+				ScreenPositionToColorsMap.colorIntervals.push({screenInterval: screenInterval, pixelsColor: Colors.fromStyleString(pixelsColor)});
+			}
 		}
 		ScreenPositionToColorsMap.colorIntervals.sort(function(a, b) { return a.screenInterval[0] - b.screenInterval[0]; }); // sort by beginning of interval, ascending
 	}
