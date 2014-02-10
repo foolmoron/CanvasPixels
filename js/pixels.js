@@ -201,6 +201,7 @@ $(function() {
 		//PixelManager.spawnPixels({count: 100, randomInitialLifetime: true});
 		
 		pixelsCanvas.mousemove(canvasMouseMoveHandler);
+		pixelsCanvas.on('touchstart', canvasMouseMoveHandler);
 		pixelsCanvas.on('touchmove', canvasMouseMoveHandler);
 		
 		requestAnimFrame(function() { updatePixels(); });
@@ -264,14 +265,29 @@ $(function() {
 	function canvasMouseMoveHandler(evt) {
 		var tileX, tileY;
 		var indices = [];
-		tileX = Math.floor(evt.offsetX / pixelSize);
-		tileY = Math.floor(evt.offsetY / pixelSize);
-		indices.push(tileY * pixelsAcross + tileX);
+		
+		if (evt.originalEvent instanceof MouseEvent) {
+			tileX = Math.floor(evt.offsetX / pixelSize);
+			tileY = Math.floor(evt.offsetY / pixelSize);
+			indices.push(tileY * pixelsAcross + tileX);
+		} else if (evt.originalEvent instanceof TouchEvent) {
+			evt.preventDefault(); // prevent default scrolling behavior which causes touchmove events to stop
+			
+			var canvasLeft = pixelsCanvas.position().left;
+			var canvasTop = pixelsCanvas.position().top;
+			for (var i = 0; i < evt.originalEvent.changedTouches.length; i++) {
+				var touch = evt.originalEvent.changedTouches[i];				
+				tileX = Math.floor((touch.clientX - canvasLeft) / pixelSize);
+				tileY = Math.floor((touch.clientY - canvasTop) / pixelSize);
+				if (tileX < 0 || tileY < 0)
+					continue;
+				indices.push(tileY * pixelsAcross + tileX);
+			}
+		}
 		
 		for (var i = 0; i < indices.length; i++) {
 			PixelManager.spawnPixelAtPositionIndex(indices[i]);
 			PixelManager.allPixels[indices[i]].lifeTime = 0;		
-			PixelManager.allPixels[indices[i]].color = Colors.RED.clone();			
 		}
 	}
 
