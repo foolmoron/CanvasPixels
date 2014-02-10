@@ -156,8 +156,8 @@ $(function() {
 	
 	var NUM_PIXELS_ACROSS_VERT = 10;
 	var NUM_PIXELS_ACROSS_HORIZ = 60;
-	var PIXEL_DEATH_TIME = 2 * 1000;
-	var PIXEL_SPAWN_INTERVAL = (1 / 1000) * 1000;
+	var PIXEL_DEATH_TIME = 4 * 1000; //ms
+	var PIXEL_SPAWN_INTERVAL = 6; //ms
 	var DEFAULT_COLOR = Colors.ORANGE;
 	
 	var pixelSize;
