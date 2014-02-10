@@ -71,16 +71,32 @@ $(function() {
 	};
 	
 	ScreenPositionToColorsMap = {
+		BORDERING_COLORS_INTERPOLATION_RANGE: 80, // px
 		colorIntervals: [], // contains list of: { screenInterval = [start, end], pixelsColor = color object }
 		
 		colorsAtVerticalPosition: function(verticalPosition) {
+			var color = DEFAULT_COLOR;
 			for (var i = 0; i < this.colorIntervals.length; i++) {
 				var interval = this.colorIntervals[i].screenInterval;
 				if (verticalPosition >= interval[0] && verticalPosition <= interval[1]) {
-					return this.colorIntervals[i].pixelsColor;
+					color = this.colorIntervals[i].pixelsColor;
+					//interp between bordering colors
+					var interpRange = this.BORDERING_COLORS_INTERPOLATION_RANGE;
+					if (i > 0 && interval[0] + interpRange >= verticalPosition) { // near previous color
+						var interp = (((interval[0] + interpRange) - verticalPosition) / interpRange) * 0.5;
+						var previousColor = this.colorIntervals[i - 1].pixelsColor;
+						color = Colors.interpolateBetween(color, previousColor, EasingFunctions.linear, interp);
+						//color = Colors.BLACK;
+					} else if (i < (this.colorIntervals.length - 1) && interval[1] - interpRange <= verticalPosition) { // near next color
+						var interp = ((verticalPosition - (interval[1] - interpRange)) / interpRange) * 0.5;
+						var nextColor = this.colorIntervals[i + 1].pixelsColor;
+						color = Colors.interpolateBetween(color, nextColor, EasingFunctions.linear, interp);
+						//color = Colors.ORANGE;
+					}
+					break;
 				}
 			}
-			return DEFAULT_COLOR;
+			return color;
 		},
 	};
 	
@@ -98,7 +114,7 @@ $(function() {
 					return;
 					
 				var index = Math.floor(Math.random() * maxIndex);
-				while (index in this.allPixels) { //linear probing ftw
+				while (index in this.allPixels) { // linear probing ftw
 					index = (index + 1) % maxIndex;
 				}
 				this.spawnPixelAtPositionIndex(index, options);
@@ -141,9 +157,9 @@ $(function() {
 				pixel.position.y = tileY * pixelSize;
 				
 				var color = ScreenPositionToColorsMap.colorsAtVerticalPosition(canvasTop + pixel.position.y);
-				pixel.color.r = color.r;
-				pixel.color.g = color.g;
-				pixel.color.b = color.b;
+				pixel.color.r = Math.round(color.r);
+				pixel.color.g = Math.round(color.g);
+				pixel.color.b = Math.round(color.b);
 			}
 		},
 		
@@ -156,8 +172,8 @@ $(function() {
 	
 	var NUM_PIXELS_ACROSS_VERT = 10;
 	var NUM_PIXELS_ACROSS_HORIZ = 60;
-	var PIXEL_DEATH_TIME = 4 * 1000; //ms
-	var PIXEL_SPAWN_INTERVAL = 6; //ms
+	var PIXEL_DEATH_TIME = 4 * 1000; // ms
+	var PIXEL_SPAWN_INTERVAL = 6; // ms
 	var DEFAULT_COLOR = Colors.ORANGE;
 	
 	var pixelSize;
@@ -171,7 +187,7 @@ $(function() {
 	var pixelsContext = pixelsCanvasDOM.getContext('2d');
 	var contentDivs = $('.content');
 	
-	// Start everything off
+	//Start everything off
 	if (isCanvasSupported()) {
 		pixelsCanvas.show();
 		initPixels();
@@ -230,7 +246,7 @@ $(function() {
 		for	(var i = 0; i < contentDivs.length; i++) {
 			var content = $(contentDivs[i]);
 			var pixelsColor = content.attr('data-pixel-colors') || DEFAULT_COLOR;			
-			//content.css('background-color', pixelsColor);
+			content.css('background-color', pixelsColor);
 			
 			var scrollY = $(window).scrollTop();
 			var screenheight = $(window).height();
