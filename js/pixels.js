@@ -1,19 +1,4 @@
 $(function() {
-	var NUM_PIXELS_ACROSS_VERT = 10;
-	var NUM_PIXELS_ACROSS_HORIZ = 60;
-	var PIXEL_DEATH_TIME = 2 * 1000;
-	var PIXEL_SPAWN_INTERVAL = (1 / 1000) * 1000;
-	
-	var pixelSize;
-	var pixelsAcross;
-	var pixelsDown;
-	
-	var lastUpdateTime = new Date().getTime();
-	var pixelSpawnTimer = 0;
-	var pixelsCanvas = $('#pixels');
-	var pixelsCanvasDOM = $('#pixels')[0];
-	var pixelsContext = pixelsCanvasDOM.getContext('2d');
-	
 	function Color(r, g, b, a) {
 		this.r = r;
 		this.g = g;
@@ -25,11 +10,12 @@ $(function() {
 		};
 		this.clone = function() {
 			return new Color(this.r, this.g, this.b, this.a);
-		}
+		};
 	}
 	Colors = { // static utilities for Color
 		BLACK: new Color(0, 0, 0),
 		BLUE: new Color(0, 0, 255),
+		ORANGE: new Color(255, 132, 0),
 		RED: new Color(255, 0, 0),
 		WHITE: new Color(255, 255, 255),
 		CLEAR: new Color(255, 255, 255, 0),
@@ -42,7 +28,13 @@ $(function() {
 					lerpNumbers(color1.b, color2.b, lerp),
 					lerpNumbers(color1.a, color2.a, lerp)
 				);
-		}
+		},
+		fromStyleString: function(styleString) {
+			var noParens = styleString.split('(')[1].split(')')[0];
+			var stringVals = noParens.split(',');
+			var numberVals = stringVals.map(function(val) { return parseFloat(val); });
+			return new Color(numberVals[0], numberVals[1], numberVals[2], numberVals[3]);
+		},
 	}
 	
 	function Pixel(color, deathTime, interpolationFunction) {
@@ -77,6 +69,20 @@ $(function() {
 	Pixels = { // static utilities for Pixel
 	};
 	
+	ScreenPositionToColorsMap = {
+		colorIntervals: [], // contains list of: { screenInterval = [start, end], pixelColors = [color objects] }
+		
+		colorsAtVerticalPosition: function(verticalPosition) {
+			for (var i = 0; i < this.colorIntervals.length; i++) {
+				var interval = this.colorIntervals[i].screenInterval;
+				if (verticalPosition >= interval[0] && verticalPosition <= interval[1]) {
+					return this.colorIntervals[i].pixelColors;
+				}
+			}
+			return [DEFAULT_COLOR];
+		},
+	};
+	
 	PixelManager = {
 		allPixels: {},
 		pixelCount: 0,
@@ -105,7 +111,7 @@ $(function() {
 			options = options || {};
 			var randomInitialLifetime = options.randomInitialLifetime || false;
 			
-			this.allPixels[index] = new Pixel(Colors.BLUE, PIXEL_DEATH_TIME);
+			this.allPixels[index] = new Pixel(DEFAULT_COLOR, PIXEL_DEATH_TIME);
 			if (randomInitialLifetime)
 				this.allPixels[index].lifeTime = Math.random() * PIXEL_DEATH_TIME / 2;
 			this.pixelCount++;
@@ -137,6 +143,23 @@ $(function() {
 		},
 	};
 	
+	var NUM_PIXELS_ACROSS_VERT = 10;
+	var NUM_PIXELS_ACROSS_HORIZ = 60;
+	var PIXEL_DEATH_TIME = 2 * 1000;
+	var PIXEL_SPAWN_INTERVAL = (1 / 1000) * 1000;
+	var DEFAULT_COLOR = Colors.ORANGE;
+	
+	var pixelSize;
+	var pixelsAcross;
+	var pixelsDown;
+	
+	var lastUpdateTime = new Date().getTime();
+	var pixelSpawnTimer = 0;
+	var pixelsCanvas = $('#pixels');
+	var pixelsCanvasDOM = $('#pixels')[0];
+	var pixelsContext = pixelsCanvasDOM.getContext('2d');
+	var contentDivs = $('.content');
+	
 	// Start everything off
 	if (isCanvasSupported()) {
 		pixelsCanvas.show();
@@ -147,7 +170,7 @@ $(function() {
 	}
 	
 	function initPixels() {
-		calculateCanvasDimensions();
+		recalculateCanvasData();
 		//PixelManager.spawnPixels({count: 100, randomInitialLifetime: true});
 		
 		pixelsCanvas.mousemove(canvasMouseMoveHandler);
@@ -161,7 +184,7 @@ $(function() {
 		var dt = currentUpdateTime - lastUpdateTime;
 		lastUpdateTime = currentUpdateTime;
 		
-		calculateCanvasDimensions();
+		recalculateCanvasData();
 		
 		pixelSpawnTimer += dt;
 		if (pixelSpawnTimer >= PIXEL_SPAWN_INTERVAL) {
@@ -175,7 +198,7 @@ $(function() {
 		drawPixels();
 	}
 	
-	function calculateCanvasDimensions() {
+	function recalculateCanvasData() {
 		var height = pixelsCanvas.height(); // get CSS dimensions of box containing canvas
 		var width = pixelsCanvas.width();
 		pixelsCanvasDOM.height = height; // actually set canvas dimensions so it isn't stretched into its box
@@ -191,6 +214,21 @@ $(function() {
 			pixelsAcross = NUM_PIXELS_ACROSS_HORIZ;
 			pixelsDown = Math.ceil(height / pixelSize);
 		}
+		
+		ScreenPositionToColorsMap.colorIntervals = [];
+		for	(var i = 0; i < contentDivs.length; i++) {
+			var content = $(contentDivs[i]);
+			var pixelColors = $.parseJSON(content.attr('data-pixel-colors')) || [DEFAULT_COLOR.toStyleString()];			
+			content.css('background-color', pixelColors[0]);
+			
+			var scrollY = $(window).scrollTop();
+			var contentY = content.offset().top;
+			var contentHeight = content.height();
+			var screenInterval = [contentY - scrollY, (contentY - scrollY) + contentHeight];
+			
+			ScreenPositionToColorsMap.colorIntervals.push({screenInterval: screenInterval, pixelColors: pixelColors});
+		}
+		ScreenPositionToColorsMap.colorIntervals.sort(function(a, b) { return a.screenInterval[0] - b.screenInterval[0]; }); // sort by beginning of interval, ascending
 	}
 	
 	function canvasMouseMoveHandler(evt) {
