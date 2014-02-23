@@ -86,12 +86,10 @@ $(function() {
 						var interp = (((interval[0] + interpRange) - verticalPosition) / interpRange) * 0.5;
 						var previousColor = this.colorIntervals[i - 1].pixelsColor;
 						color = Colors.interpolateBetween(color, previousColor, EasingFunctions.linear, interp);
-						//color = Colors.BLACK;
 					} else if (i < (this.colorIntervals.length - 1) && interval[1] - interpRange <= verticalPosition) { // near next color
 						var interp = ((verticalPosition - (interval[1] - interpRange)) / interpRange) * 0.5;
 						var nextColor = this.colorIntervals[i + 1].pixelsColor;
 						color = Colors.interpolateBetween(color, nextColor, EasingFunctions.linear, interp);
-						//color = Colors.ORANGE;
 					}
 					break;
 				}
@@ -198,7 +196,6 @@ $(function() {
 	
 	function initPixels() {
 		recalculateCanvasData();
-		//PixelManager.spawnPixels({count: 100, randomInitialLifetime: true});
 		
 		pixelsCanvas.mousemove(canvasMouseMoveHandler);
 		pixelsCanvas.on('touchstart', canvasMouseMoveHandler);
@@ -247,7 +244,7 @@ $(function() {
 		for	(var i = 0; i < contentDivs.length; i++) {
 			var content = $(contentDivs[i]);
 			var pixelsColor = content.attr('data-pixel-colors') || DEFAULT_COLOR;			
-			//content.css('background-color', pixelsColor);
+			content.css('border', "5px solid " + pixelsColor);
 			
 			var scrollY = $(window).scrollTop();
 			var screenheight = $(window).height();
