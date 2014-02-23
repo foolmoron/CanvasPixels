@@ -252,7 +252,7 @@ $(function() {
 			var scrollY = $(window).scrollTop();
 			var screenheight = $(window).height();
 			var contentY = content.offset().top;
-			var contentHeight = content.height();
+			var contentHeight = content.outerHeight();
 			var screenInterval = [contentY - scrollY, (contentY - scrollY) + contentHeight];
 			
 			if (screenInterval[1] >= 0 && screenInterval[0] <= screenheight) { // filter out off-screen intervals
