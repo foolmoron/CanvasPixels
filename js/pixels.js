@@ -183,7 +183,6 @@ $(function() {
 	var pixelsCanvas = $('#pixels');
 	var pixelsCanvasDOM = $('#pixels')[0];
 	var pixelsContext = pixelsCanvasDOM.getContext('2d');
-	var contentDivs = $('.content');
 	
 	//Start everything off
 	if (isCanvasSupported()) {
@@ -224,6 +223,7 @@ $(function() {
 	}
 	
 	function recalculateCanvasData() {
+		var contentDivs = $('.content');
 		var height = pixelsCanvas.height(); // get CSS dimensions of box containing canvas
 		var width = pixelsCanvas.width();
 		pixelsCanvasDOM.height = height; // actually set canvas dimensions so it isn't stretched into its box
