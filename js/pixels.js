@@ -223,7 +223,7 @@ $(function() {
 	}
 	
 	function recalculateCanvasData() {
-		var contentDivs = $('.content');
+		var contentDivs = $('[data-pixel-colors]');
 		var height = pixelsCanvas.height(); // get CSS dimensions of box containing canvas
 		var width = pixelsCanvas.width();
 		pixelsCanvasDOM.height = height; // actually set canvas dimensions so it isn't stretched into its box
