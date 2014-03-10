@@ -244,7 +244,7 @@ $(function() {
 		for	(var i = 0; i < contentDivs.length; i++) {
 			var content = $(contentDivs[i]);
 			var pixelsColor = content.attr('data-pixel-colors') || DEFAULT_COLOR;			
-			content.css('border', "5px solid " + pixelsColor);
+			//content.css('border', "5px solid " + pixelsColor);
 			
 			var scrollY = $(window).scrollTop();
 			var screenheight = $(window).height();
