@@ -71,7 +71,7 @@ $(function() {
 	};
 	
 	ScreenPositionToColorsMap = {
-		BORDERING_COLORS_INTERPOLATION_RANGE: 80, // px
+		BORDERING_COLORS_INTERPOLATION_RANGE: 60, // px
 		colorIntervals: [], // contains list of: { screenInterval = [start, end], pixelsColor = color object }
 		
 		colorsAtVerticalPosition: function(verticalPosition) {
