@@ -172,7 +172,7 @@ $(function() {
 	var NUM_PIXELS_ACROSS_HORIZ = 60;
 	var PIXEL_DEATH_TIME = 4 * 1000; // ms
 	var PIXEL_SPAWN_INTERVAL = 6; // ms
-	var DEFAULT_COLOR = Colors.BLACK;
+	var DEFAULT_COLOR = Colors.WHITE;
 	
 	var pixelSize;
 	var pixelsAcross;
